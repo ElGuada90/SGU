@@ -91,9 +91,10 @@ def ventana_principal(usuario, rol):
         # Crear gráfico de barras
         ax.bar(nombres, valores)
         ax.set_title("Ventas por Vendedor")
-        ax.set_xlabel("Vendedor", fontsize=8)
+        #ax.set_xlabel("Vendedor", fontsize=8)
         ax.set_ylabel("Monto Vendido")
-        ax.tick_params(axis='x', rotation=25)
+        ax.tick_params(axis='x', rotation=35, labelsize=7)
+        fig.subplots_adjust(bottom=0.25)  # Aumenta margen inferior
 
         # Insertar en el frame
         canvas = FigureCanvasTkAgg(fig, master=frame_grafico1)
@@ -133,7 +134,7 @@ def ventana_principal(usuario, rol):
         wedges, texts = ax.pie(
             valores,
             wedgeprops=dict(width=0.5),
-            startangle=90
+            startangle=50
         )
 
         # Estilo de etiquetas externas con flechas
@@ -150,6 +151,8 @@ def ventana_principal(usuario, rol):
         # ---- ANOTACIONES SIN NUMPY ----
         for i, wedge in enumerate(wedges):
             ang = (wedge.theta2 - wedge.theta1) / 2.0 + wedge.theta1
+            if valores[i] / total < 0.02:   # menos de 2%
+                ang += 8
             ang_rad = math.radians(ang)
 
             # Posiciones para la anotación
@@ -165,7 +168,7 @@ def ventana_principal(usuario, rol):
             ax.annotate(
                 texto,
                 xy=(x * 0.7, y * 0.7),
-                xytext=(1.2 * x, 1.2 * y),
+                xytext=(1.35 * x, 1.35 * y),
                 horizontalalignment=alineacion,
                 **kw
             )
@@ -196,9 +199,26 @@ def ventana_principal(usuario, rol):
         ax = fig.add_subplot(111)
 
         # Datos reales
-        ax.bar(["Promedio Ventas"], [promedio])
+        barras = ax.bar(["Valor Promedio"], [promedio])
         ax.set_title("Promedio de Ventas")
-        ax.set_ylabel("Valor Promedio")
+        #ax.set_ylabel("Valor Promedio")
+
+        # Obtener referencia de la única barra
+        barra = barras[0]
+
+        # Coordenadas del centro de la barra
+        x = barra.get_x() + barra.get_width() / 2
+        y = promedio / 2
+
+        ax.text(
+            x, y,
+            str(promedio),
+            ha="center",
+            va="center",
+            fontsize=50,
+            color="white",      # si fondo es azul se verá mejor
+            fontweight="bold"
+        )
 
         # Crear lienzo dentro del frame
         canvas = FigureCanvasTkAgg(fig, master=frame_grafico3)

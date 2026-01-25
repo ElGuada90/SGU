@@ -76,21 +76,7 @@ def ventana_ventas(usuario, rol):
             treeview.delete(fila)
 
         query = """
-            SELECT
-                v.valor,
-                -- v.id_producto,
-                p.producto,
-                -- v.id_usuario
-                u.usuario, 
-                concat(u.nombre, " ", u.apellido) AS nombre,
-                v.moddate AS fecha
-            FROM ventas v
-            LEFT JOIN productos p
-                ON v.id_producto = p.id
-            LEFT JOIN usuarios u
-                ON v.id_usuario = u.id
-            ORDER BY
-                v.moddate DESC
+          SELECT * FROM ventas_por_vendedor
         """
         resultados = db.obtener_datos(query)
 

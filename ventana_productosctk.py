@@ -1,33 +1,52 @@
-""" VENTANA DE PRODUCTOS"""
 
+# ======================= #
+""" VENTANA DE PRODUCTOS"""
+# ======================= #
+
+# =========================== #
 """ Bloque de Configuración """
+# =========================== #
+
+# ================== #
 # importamos librerias
+# ================== #
 import customtkinter as ctk
 from PIL import Image, ImageTk
 from tkinter import Frame, Menu
+import os, shutil
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 
+# ================== #
 # Importamos modulos
+# ================== #
 from modulo_resource_path import resource_path
 from modulo_conexion_mysql import ConexionMySQL
 
 from ventana_usuariosctk import ventana_usuarios
 from ventana_ventasctk import ventana_ventas
 
+# ================= #
 # temas y apariencia
+# ================= #
 ctk.set_appearance_mode("Dark")  # Modes: "System" (default), "Dark", "Light"
 ctk.set_default_color_theme("blue")  # Themes: "blue" (default), "green", "dark-blue"
 # enlace o ruta de imagenes
 icon = resource_path("static\\images\\Logo Python ico.ico")
 
+# ====================================== #
 # funcion para crear la ventana productos
+# ====================================== #
 def ventana_productos(usuario, rol):
 
     lupa = resource_path("static\\images\\Lupa Blanca.png")
     lupa_icon = ctk.CTkImage(light_image=Image.open(lupa), size=(25, 25))
     delete = resource_path("static\\images\\delete.png")
     delete_icon = ctk.CTkImage(light_image=Image.open(delete), size=(25, 25))
+    edit = resource_path("static\\images\\edit.png")
+    edit_icon = ctk.CTkImage(light_image=Image.open(edit), size=(25, 25))
+    add = resource_path("static\\images\\add.png")
+    add_icon = ctk.CTkImage(light_image=Image.open(add), size=(25, 25))
     
     ventana_productos = ctk.CTk()
     ventana_productos.title("Sistema de Gestion Unico")
@@ -37,48 +56,204 @@ def ventana_productos(usuario, rol):
     ventana_productos.grid_columnconfigure(1, weight=1)
     ventana_productos.grid_rowconfigure(1, weight=1)
 
-    """ Bloque de Funciones """
+    # ========================== #
     # Crear instancia de conexión
+    # ========================== #
     db = ConexionMySQL()
 
-
+    # =============================== #
+    """ === Bloque de Funciones === """
+    # =============================== #
+    
+    # ===================================================== #
     """ Función para obtener todos los datos de productos """
+    # ===================================================== #
     def cargar_productos():
         #limpiar_campos()
         for fila in treeview.get_children():
             treeview.delete(fila)
 
-        query = "SELECT id, producto, categoria FROM productos"
+        query = "SELECT producto, categoria, subcategoria FROM productos"
         resultados = db.obtener_datos(query)
 
         for fila in resultados:
             treeview.insert("", "end", values=(
-                fila["id"], fila["producto"], fila["categoria"]
+                fila["producto"], fila["categoria"], fila["subcategoria"]
             ))
 
+    # ================================================================== #
+    """Modificar los datos del usuario seleccionado en la base de datos"""
+    # ================================================================== #
+    def modificar_registro():
+        selected_item = treeview.focus()  # Obtener el elemento seleccionado
+        if not selected_item:
+            messagebox.showerror("Error", "No se ha seleccionado ningún usuario")
+            return
 
+        # Obtener el ID del usuario seleccionado
+        valores = treeview.item(selected_item, "values")
+        usuario_actual = valores[0]
+
+        # Obtener los nuevos valores de las entradas
+        nuevo_codigo = entry_codigo.get()
+        nuevo_producto = entry_producto.get()
+        nueva_descripcion = entry_descripcion.get()
+        nueva_marca = entry_marca.get()
+        nuevo_cantidad = entry_cantidad.get()
+        nuevo_pcosto = entry_pcosto.get()
+        nueva_categoria = categoria_combobox.get()
+        nueva_subcategoria = subcategoria_combobox.get()
+        
+
+        if nuevo_codigo and nuevo_producto:
+            query = """
+            UPDATE productos
+            SET codigo=%s, producto=%s, descripcion=%s, marca=%s, inventario=%s, pcosto=%s, categoria=%s, subcategoria=%s, enlace=%s
+            WHERE usuario=%s
+            """
+            params = (nuevo_codigo, nuevo_producto, nueva_descripcion, nueva_marca,
+                      nuevo_cantidad, nuevo_pcosto, nueva_categoria, nueva_subcategoria, usuario_actual)
+
+            if db.ejecutar_consulta(query, params):
+                messagebox.showinfo("Modificación", "Usuario modificado con éxito.")
+                cargar_productos()
+                limpiar_campos()
+        else:
+            messagebox.showerror("Error", "Por favor, complete todos los campos")
+
+    # ==================================================================== #
+    """Cargar los datos de la fila seleccionada en los campos de entrada"""
+    # ==================================================================== #
+    def seleccionar_producto(event):
+        selected_item = treeview.focus()
+        if not selected_item:
+            return  # No hay fila seleccionada
+    
+        valores = treeview.item(selected_item, "values")
+    
+        # Asumimos que los valores están en el mismo orden que los entries
+        #entry_codigo.delete(0, tk.END)
+        #entry_codigo.insert(0, valores[0])
+
+        entry_producto.delete(0, tk.END)
+        entry_producto.insert(0, valores[0])
+        entry_descripcion.delete(0, tk.END)
+        entry_descripcion.insert(0, valores[0])
+    
+        #categoria_combobox.set(valores[4])
+    
+       
+
+    # ======================================== #
     """ Función para volver al menú producto """
+    # ======================================== #
     def volver_menu_ventanas():
         # Importación tardía para evitar la importación circular
         from ventana_menuctk import ventana_principal
         ventana_productos.destroy()  # Cerrar ventana actual
         ventana_principal(usuario, rol)  # Abrir menú
 
+    # ============================================= #
     """ Función para abrir la ventana de usuarios """
+    # ============================================= #
     def abrir_usuarios():
         # cerramos la ventana producto
         ventana_productos.destroy()
         # abrir la ventana de usuarios (la función debe crear su propia ventana)
         ventana_usuarios(usuario, rol)
 
+    # ============================================= #
     """ Función para abrir la ventana de ventas """
+    # ============================================= #
     def abrir_ventas():
         # cerramos la ventana producto
         ventana_productos.destroy()
         # abrir la ventana de usuarios (la función debe crear su propia ventana)
         ventana_ventas(usuario, rol)
 
+    # ================================== #
+    """ Función para busqueda Dinámica """
+    # ================================== #
+    def consulta_dinamica(event):
+        consulta = entry_consulta.get().strip()
+
+        # Limpiar el Treeview
+        for item in treeview.get_children():
+            treeview.delete(item)
+
+        # Si el entry está vacío, mostrar todos los registros
+        if not consulta:
+            cargar_productos()
+            return
+
+        # Consulta SQL dinámica (usa LIKE con %)
+        query = """
+        SELECT producto, categoria, subcategoria
+        FROM productos
+        WHERE producto LIKE %s OR categoria LIKE %s OR subcategoria LIKE %s
+        """
+        params = (f"%{consulta}%", f"%{consulta}%", f"%{consulta}%")
+
+        resultados = db.obtener_datos(query, params)
+
+        for fila in resultados:
+            treeview.insert("", "end", values=(
+                fila["producto"], fila["categoria"], fila["subcategoria"],
+                #fila["nombre"], fila["apellido"], fila["email"], fila["telefono"]
+            ))
+
+    # ================================================ #
+    """ Función para habilitar acceso a los usuarios """   
+    # ================================================ #
+    def role_acceso():
+        """Verificar si el usuario tiene rol de 'Full Stack' o 'Admin'"""
+        return rol in ['Full Stack', 'admin']
+    
+    # ==================================================== #
+    """Función para cargar una imagen y almacenar la ruta"""
+    # ==================================================== #
+    def cargar_imagen(self):
+        self.enlace = filedialog.askopenfilename(title="Seleccionar imagen", filetypes=[("Imagenes", "*.png *.jpg *.jpeg *.gif")])
+        if self.enlace:
+            # Obtiene el nombre del archivo de la imagen seleccionada
+            nombre_imagen = os.path.basename(self.enlace)
+            # Define la ruta de destino dentro de la carpeta 'static/image'
+            destino = os.path.join("static", "image", nombre_imagen)
+            try:
+                # Crea la carpeta 'static/image' si no existe
+                if not os.path.exists(os.path.dirname(destino)):
+                    os.makedirs(os.path.dirname(destino))
+
+                # Copia la imagen seleccionada a la carpeta destino
+                shutil.copy(self.enlace, destino)
+
+                # Guarda la ruta relativa de la imagen en la base de datos
+                self.enlace = os.path.join("static", "image", nombre_imagen)
+                #self.guardar_imagen_en_db(self.enlace)
+                
+                # Muestra un mensaje de éxito
+                messagebox.showinfo("Imagen cargada", f"Imagen guardada en: {self.enlace}")
+
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo cargar la imagen: {str(e)}")  
+
+
+    # === Funciones para limpiar Campos == #         
+    def limpiar_campos(self):
+        """Limpiar los campos de entrada"""
+        entry_codigo.delete(0, tk.END)
+        entry_producto.delete(0, tk.END)
+        entry_descripcion.delete(0, tk.END)
+        entry_marca.delete(0, tk.END)
+        entry_cantidad.delete(0, tk.END)
+        entry_pcosto.delete(0, tk.END)
+        categoria_combobox.set("")
+        subcategoria_combobox.set("")
+       
+
+    # ============================================== #
     """ Función para manejar las opciones del menú """
+    # ============================================== #
     # Funcion para el OptionMMenu
     def ejecutar_menu(opcion):
         if opcion == "Menu Principal":
@@ -88,9 +263,12 @@ def ventana_productos(usuario, rol):
         elif opcion == "Ventas":
             abrir_ventas()
         elif opcion == "Exit":
-            ventana_productos.destroy()    
+            ventana_productos.destroy()  
 
-    """ Bloque de Menu """
+    # =========================== #
+    """ Bloque de Barra de Menu """
+    # =========================== #
+
     # --- Bloque de Frame para barra de navegación ---
     
     nav_frame = ctk.CTkFrame(ventana_productos, corner_radius=8) 
@@ -98,7 +276,7 @@ def ventana_productos(usuario, rol):
     nav_frame.grid_columnconfigure(0, weight=1)
     nav_frame.grid_rowconfigure(0, weight=1)
 
-    # widget de meunu de ventanas
+   
     # ----- PRIMER OPTIONMENU (FILE) -----
     opciones_file = ["Menu Principal", "Usuarios", "Ventas", "Exit"]
 
@@ -106,81 +284,103 @@ def ventana_productos(usuario, rol):
     menu.set("Productos")
     menu.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
+    # Label para icono de busqueda
+    label_lupa_icon = ctk.CTkLabel(nav_frame,
+                    text="",
+                    image=lupa_icon,
+                    font=ctk.CTkFont(size=18, weight="bold"),
+                    height=31)
+    label_lupa_icon.grid(row=0, column=0, padx=220, pady=(8), sticky="e")
+
+    # Widget para busqueda dinamica de datos
+    entry_consulta = ctk.CTkEntry(nav_frame,
+                                    placeholder_text="Buscar...",
+                                    width=210,
+                                    height=30)
+    entry_consulta.grid(row=0, column=0, padx=5, pady=(8), sticky="ne")
+    entry_consulta.bind("<KeyRelease>", consulta_dinamica)
+
     form_frame = ctk.CTkFrame(ventana_productos, corner_radius=8) 
     form_frame.grid(row=1, column=0, padx=(15,2), pady=1, sticky="nsew")
 
-    label_producto = ctk.CTkLabel(form_frame, text='Producto')
-    label_producto.grid(row=4, column=0, padx=10, pady=2, sticky="nw")
+    image_frame = ctk.CTkFrame(form_frame, corner_radius=8)
+    image_frame.grid(row=2, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")
 
-    producto_entry = ctk.CTkEntry(form_frame, 
+    image_btn = ctk.CTkButton(form_frame, text="Cargar Imagen...")
+    image_btn.grid(row=3, column=0, columnspan=3, padx=10, pady=2, sticky="ew")
+
+    label_producto = ctk.CTkLabel(form_frame, text='Producto')
+    label_producto.grid(row=4, column=0, padx=10, pady=(10,2), sticky="w")
+
+    entry_producto = ctk.CTkEntry(form_frame, 
                                   placeholder_text='Ingrese Producto...',
                                   height=40)
-    producto_entry.grid(row=5, column=0, padx=(10,2), pady=2, sticky='new')
+    entry_producto.grid(row=5, column=0, padx=(10,2), pady=2, sticky='ew')
 
     label_descripcion = ctk.CTkLabel(form_frame, text='Descripcion')
-    label_descripcion.grid(row=4, column=1, columnspan=2, padx=10, pady=2, sticky="nw")
+    label_descripcion.grid(row=4, column=1, columnspan=2, padx=10, pady=(10,2), sticky="w")
 
-    descripcion_entry = ctk.CTkEntry(form_frame, 
+    entry_descripcion = ctk.CTkEntry(form_frame, 
                                   placeholder_text='Ingrese Descripcion...',
                                   height=40)
-    descripcion_entry.grid(row=5, column=1, columnspan=2, padx=(2,10), pady=2, sticky='new')
+    entry_descripcion.grid(row=5, column=1, columnspan=2, padx=(2,10), pady=2, sticky='ew')
 
     label_marca = ctk.CTkLabel(form_frame, text='Marca')
-    label_marca.grid(row=6, column=0, padx=10, pady=(12,2), sticky="nw")
+    label_marca.grid(row=6, column=0, padx=10, pady=(10,2), sticky="w")
 
-    marca_entry = ctk.CTkEntry(form_frame, 
+    entry_marca = ctk.CTkEntry(form_frame, 
                                   placeholder_text='Ingrese Marca...',
                                   height=40)
-    marca_entry.grid(row=7, column=0, padx=(10,2), pady=2, sticky='new')
+    entry_marca.grid(row=7, column=0, padx=(10,2), pady=2, sticky='ew')
 
     label_categoria = ctk.CTkLabel(form_frame, text='Categoria')
-    label_categoria.grid(row=6, column=1, padx=(10,2), pady=(10,2), sticky="nw")
+    label_categoria.grid(row=6, column=1, padx=(10,2), pady=(10,2), sticky="w")
 
     categoria_combobox = ctk.CTkComboBox(form_frame, height=40, state="readonly")
-    categoria_combobox.grid(row=7, column=1, padx=(2,2), pady=2, sticky='new')
+    categoria_combobox.grid(row=7, column=1, padx=(2,2), pady=2, sticky='ew')
     categoria_combobox.set("Seleccione..")
 
     label_subcategoria = ctk.CTkLabel(form_frame, text='Sub-Categoria')
-    label_subcategoria.grid(row=6, column=2, padx=(2,10), pady=(10,2), sticky="nw")
+    label_subcategoria.grid(row=6, column=2, padx=(2,10), pady=(10,2), sticky="w")
 
     subcategoria_combobox = ctk.CTkComboBox(form_frame, height=40, state="readonly")
-    subcategoria_combobox.grid(row=7, column=2, padx=(2,10), pady=2, sticky='new')
+    subcategoria_combobox.grid(row=7, column=2, padx=(2,10), pady=2, sticky='ew')
     subcategoria_combobox.set("Seleccione..")
 
     label_codigo = ctk.CTkLabel(form_frame, text='Codigo')
-    label_codigo.grid(row=8, column=0, padx=10, pady=2, sticky="nw")
+    label_codigo.grid(row=8, column=0, padx=10, pady=(10,2), sticky="w")
 
-    codigo_entry = ctk.CTkEntry(form_frame, 
+    entry_codigo = ctk.CTkEntry(form_frame, 
                                   placeholder_text='Ingrese Codigo...',
                                   height=40)
-    codigo_entry.grid(row=9, column=0, padx=(10,2), pady=(2,10), sticky='new')
+    entry_codigo.grid(row=9, column=0, padx=(10,2), pady=(2,10), sticky='ew')
 
-    label_inventario = ctk.CTkLabel(form_frame, text='Cantidad')
-    label_inventario.grid(row=8, column=1, padx=(2,2), pady=2, sticky="nw")
+    label_cantidad = ctk.CTkLabel(form_frame, text='Cantidad')
+    label_cantidad.grid(row=8, column=1, padx=(2,2), pady=(10,2), sticky="w")
 
-    inventario_entry = ctk.CTkEntry(form_frame, 
+    entry_cantidad = ctk.CTkEntry(form_frame, 
                                   placeholder_text='Ingrese Inventario...',
                                   height=40)
-    inventario_entry.grid(row=9, column=1, padx=(2,2), pady=(2,10), sticky='new')
+    entry_cantidad.grid(row=9, column=1, padx=(2,2), pady=(2,10), sticky='ew')
 
     label_costo = ctk.CTkLabel(form_frame, text='Precio de Costo')
-    label_costo.grid(row=8, column=2, padx=(2,10), pady=2, sticky="nw")
+    label_costo.grid(row=8, column=2, padx=(2,10), pady=(10,2), sticky="w")
 
-    costo_entry = ctk.CTkEntry(form_frame, 
+    entry_pcosto = ctk.CTkEntry(form_frame, 
                                   placeholder_text='Ingrese Costo...',
                                   height=40)
-    costo_entry.grid(row=9, column=2, padx=(2,10), pady=(2,10), sticky='new')
+    entry_pcosto.grid(row=9, column=2, padx=(2,10), pady=(2,10), sticky='ew')
 
 
     """ Bloque de Botones CRUD """
 
-    registrar_button = ctk.CTkButton(form_frame, text="Registrar", height=40,)
+    registrar_button = ctk.CTkButton(form_frame, text="", height=40, image=add_icon)
     registrar_button.grid(row=14, column=0, padx=(10,2), pady=15, sticky="ew")
 
-    editar_button = ctk.CTkButton(form_frame, text="Editar", height=40,)
+    editar_button = ctk.CTkButton(form_frame, text="", height=40, image=edit_icon)
     editar_button.grid(row=14, column=1, padx=(2,2), pady=15, sticky="ew")
 
-    eliminar_button = ctk.CTkButton(form_frame, text="Eliminar", height=40, image=delete_icon)
+    eliminar_button = ctk.CTkButton(form_frame, text="", height=40, image=delete_icon)
     eliminar_button.grid(row=14, column=2, padx=(2,10), pady=15, sticky="ew")
 
     # === BLOQUE TABLA DE productos ===
@@ -205,7 +405,7 @@ def ventana_productos(usuario, rol):
     # Crear el Treeview
     treeview = ttk.Treeview(
         tabla_frame,
-        columns=("Id", "Producto", "Categoria"),
+        columns=("Producto", "Descripcion", "Marca", "Categoria", "Subcategoria" ),
         show="headings",
         yscrollcommand=scrollbar_y.set,
         #xscrollcommand=scrollbar_x.set,
@@ -249,19 +449,23 @@ def ventana_productos(usuario, rol):
     )
     
     # Definir encabezados de la tabla
-    treeview.heading("Id", text="Id", anchor="w")
     treeview.heading("Producto", text="Producto", anchor="w")
+    treeview.heading("Descripcion", text="Descripcion", anchor="w")
+    treeview.heading("Marca", text="Marca", anchor="w")
     treeview.heading("Categoria", text="Categoria", anchor="w")
+    treeview.heading("Subcategoria", text="Subcategoria", anchor="w")
    
 
     # Ajustar el tamaño de las columnas
-    treeview.column("Id", width=10)
     treeview.column("Producto", width=50)
+    treeview.column("Descripcion", width=50)
+    treeview.column("Marca", width=50)
     treeview.column("Categoria", width=50)
+    treeview.column("Subcategoria", width=50)
    
-
+   
     # Vincular evento de selección de fila
-    treeview.bind("<ButtonRelease-1>", )
+    treeview.bind("<ButtonRelease-1>", seleccionar_producto)
 
         
     footer_label = ctk.CTkLabel(ventana_productos, 
