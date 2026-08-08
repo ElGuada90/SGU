@@ -12,7 +12,6 @@
 # ================== #
 import customtkinter as ctk
 from PIL import Image, ImageTk
-from tkinter import Frame, Menu
 import os, shutil
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -51,7 +50,7 @@ def ventana_productos(usuario, rol):
     ventana_productos = ctk.CTk()
     ventana_productos.title("Sistema de Gestion Unico")
     ventana_productos.iconbitmap(icon)
-    ventana_productos.geometry("1280x720+150+8")
+    ventana_productos.geometry("1280x720+0+0")
     ventana_productos.resizable(True, True)
     ventana_productos.grid_columnconfigure(1, weight=1)
     ventana_productos.grid_rowconfigure(1, weight=1)
@@ -73,12 +72,12 @@ def ventana_productos(usuario, rol):
         for fila in treeview.get_children():
             treeview.delete(fila)
 
-        query = "SELECT producto, categoria, subcategoria FROM productos"
+        query = "SELECT * FROM productos"
         resultados = db.obtener_datos(query)
 
         for fila in resultados:
             treeview.insert("", "end", values=(
-                fila["producto"], fila["categoria"], fila["subcategoria"]
+                fila["codigo"], fila["producto"], fila["descripcion"], fila["marca"], fila["inventario"], fila["pcosto"], fila["categoria"], fila["subcategoria"]
             ))
 
     # ================================================================== #
@@ -132,16 +131,21 @@ def ventana_productos(usuario, rol):
         valores = treeview.item(selected_item, "values")
     
         # Asumimos que los valores están en el mismo orden que los entries
-        #entry_codigo.delete(0, tk.END)
-        #entry_codigo.insert(0, valores[0])
-
+        entry_codigo.delete(0, tk.END)
+        entry_codigo.insert(0, valores[0])
         entry_producto.delete(0, tk.END)
-        entry_producto.insert(0, valores[0])
+        entry_producto.insert(0, valores[1])
         entry_descripcion.delete(0, tk.END)
-        entry_descripcion.insert(0, valores[0])
-    
-        #categoria_combobox.set(valores[4])
-    
+        entry_descripcion.insert(0, valores[2])
+        entry_marca.delete(0, tk.END)
+        entry_marca.insert(0, valores[3])
+        categoria_combobox.set(valores[6])
+        subcategoria_combobox.set(valores[7])
+        entry_cantidad.delete(0, tk.END)
+        entry_cantidad.insert(0, valores[4])
+        entry_pcosto.delete(0, tk.END)
+        entry_pcosto.insert(0, valores[5])
+
        
 
     # ======================================== #
@@ -284,7 +288,7 @@ def ventana_productos(usuario, rol):
     menu.set("Productos")
     menu.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
-    # Label para icono de busqueda
+    # Label para contener icono de busqueda (Lupa)
     label_lupa_icon = ctk.CTkLabel(nav_frame,
                     text="",
                     image=lupa_icon,
@@ -405,7 +409,7 @@ def ventana_productos(usuario, rol):
     # Crear el Treeview
     treeview = ttk.Treeview(
         tabla_frame,
-        columns=("Producto", "Descripcion", "Marca", "Categoria", "Subcategoria" ),
+        columns=("Codigo", "Producto", "Descripcion", "Marca", "Inventario", "PrecioCosto", "Categoria", "Subcategoria"),
         show="headings",
         yscrollcommand=scrollbar_y.set,
         #xscrollcommand=scrollbar_x.set,
@@ -430,7 +434,7 @@ def ventana_productos(usuario, rol):
         fieldbackground="#2e2e2e",
         bordercolor="#2b2b2b",
         borderwidth=0,
-        font=("Candara", 11)
+        font=("Candara", 12)
     )
 
     # Encabezados con color personalizado
@@ -438,7 +442,7 @@ def ventana_productos(usuario, rol):
         "Treeview.Heading",
         background="#3b3b3b",
         foreground="#00bfff",
-        font=("Candara", 11, "bold")
+        font=("Candara", 12, "bold")
     )
 
     # Selección con color personalizado
@@ -449,17 +453,23 @@ def ventana_productos(usuario, rol):
     )
     
     # Definir encabezados de la tabla
+    treeview.heading("Codigo", text="Código", anchor="w")
     treeview.heading("Producto", text="Producto", anchor="w")
-    treeview.heading("Descripcion", text="Descripcion", anchor="w")
+    treeview.heading("Descripcion", text="Descripción", anchor="w")
     treeview.heading("Marca", text="Marca", anchor="w")
-    treeview.heading("Categoria", text="Categoria", anchor="w")
-    treeview.heading("Subcategoria", text="Subcategoria", anchor="w")
+    treeview.heading("Inventario", text="Inventario", anchor="w")
+    treeview.heading("PrecioCosto", text="Precio de Costo", anchor="w")
+    treeview.heading("Categoria", text="Categoría", anchor="w")
+    treeview.heading("Subcategoria", text="Subcategoría", anchor="w")
    
 
     # Ajustar el tamaño de las columnas
+    treeview.column("Codigo", width=50)
     treeview.column("Producto", width=50)
     treeview.column("Descripcion", width=50)
     treeview.column("Marca", width=50)
+    treeview.column("Inventario", width=50)
+    treeview.column("PrecioCosto", width=50)
     treeview.column("Categoria", width=50)
     treeview.column("Subcategoria", width=50)
    
@@ -471,7 +481,7 @@ def ventana_productos(usuario, rol):
     footer_label = ctk.CTkLabel(ventana_productos, 
                                 font=ctk.CTkFont(size=10, weight="bold"),
                                 fg_color="transparent",
-                                text="Copyright © 2025\nPython Hack By ElGuada90",
+                                text="Copyright © 2025 * Python Hack By ElGuada90",
                                 corner_radius=5)
     footer_label.grid(row=4, column= 0, columnspan=2, padx=5, pady=5, sticky="s" )
 

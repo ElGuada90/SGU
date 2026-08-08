@@ -6,22 +6,21 @@
 
 # importar librerias
 import customtkinter as ctk
-from PIL import Image, ImageTk
-from tkinter import ttk, filedialog, messagebox
+from PIL import Image
+from tkinter import messagebox
 
 # importar modulos
 from modulo_resource_path import resource_path
 from modulo_sesion import iniciar_sesion
-from ventana_menuctk import ventana_principal
-from modulo_conexion_mysql import ConexionMySQL
-
+#from ventana_menuctk import ventana_principal
+from ventana_menu import VentanaMenuPrincipal
 
 # temas y apariencia
 ctk.set_appearance_mode("Dark")  # Modes: "System" (default), "Dark", "Light"
 ctk.set_default_color_theme("blue")  # Themes: "blue" (default), "green", "dark-blue"
 
 # enlace o ruta de imagenes
-logo = resource_path("static\\images\\Logo Python.png")
+logo = resource_path("static\\images\\logo-python_convert.png")
 icon = resource_path("static\\images\\Logo Python ico.ico")
 
 #####################
@@ -32,13 +31,13 @@ class VentanaLogin(ctk.CTk):
         super().__init__()
         self.title("Sistema de Gestion Unico")
         self.iconbitmap(icon)
-        self.geometry("1280x720+150+8")
+        self.geometry("1280x720+0+0")
         self.resizable(True, True)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
         # cargar imagen de logo
-        self.logo_image = ctk.CTkImage(light_image=Image.open(logo), size=(50, 50))
+        self.logo_image = ctk.CTkImage(light_image=Image.open(logo), size=(65, 40))
 
         # Creamos las variables Globales para los intentos de inicio de sesión
         self.intentos = 0
@@ -96,7 +95,7 @@ class VentanaLogin(ctk.CTk):
         self.boton_login.grid(row=5, column=0, padx=10, pady=10)
 
         self.label_footer = ctk.CTkLabel(self, 
-                                    text=f"Copyright © 2025\nPython Hack: by ElGuada90", 
+                                    text=f"Copyright © 2025 * Python Hack: by ElGuada90", 
                                     font=ctk.CTkFont(family="verdana", 
                                     size=10, 
                                     weight="bold"))
@@ -135,8 +134,7 @@ class VentanaLogin(ctk.CTk):
 
     # Función para validar las credenciales
     def validar_credenciales(self):
-       
-
+        
         usuarios, contraseñas, roles = self.bd_container()
 
         usuario = self.entrada_usuario.get().lower()
@@ -157,7 +155,7 @@ class VentanaLogin(ctk.CTk):
             """ Ingreso a la ventana principal """
             self.destroy()  # Cerrar la ventana de login
             #ventana_usuarios(usuario, rol) # Abrir la ventana principal
-            ventana_principal(usuario, rol)
+            self.abrir_ventana_menu(usuario, rol)
         else:
             self.intentos += 1
             if self.intentos >= self.max_intentos:
@@ -169,6 +167,11 @@ class VentanaLogin(ctk.CTk):
                 # Limpia los campos de entrada al fallar
                 self.entrada_usuario.delete(0, 'end')
                 self.entrada_contraseña.delete(0, 'end')
+
+    """ Funcion para abrir la ventana menu """
+    def abrir_ventana_menu(self, usuario, rol):
+        ventana_menu = VentanaMenuPrincipal(usuario=usuario, rol=rol)
+        ventana_menu.mainloop()            
 
 #######################################################
 """ Bloque de inicializacion de la ventana de login """

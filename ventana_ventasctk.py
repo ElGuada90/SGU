@@ -30,7 +30,7 @@ def ventana_ventas(usuario, rol):
     ventana_ventas = ctk.CTk()
     ventana_ventas.title("Sistema de Gestion Unico")
     ventana_ventas.iconbitmap(icon)
-    ventana_ventas.geometry("1280x720+150+8")
+    ventana_ventas.geometry("1280x720+0+0")
     ventana_ventas.resizable(True, True)
     ventana_ventas.grid_columnconfigure(0, weight=1)
     ventana_ventas.grid_rowconfigure(3, weight=1)
@@ -109,7 +109,7 @@ def ventana_ventas(usuario, rol):
         ventana_ventas.destroy()  # Cerrar ventana actual
         ventana_principal(usuario, rol)  # Abrir menú principal
 
-     # ========== F R A M E  N A V B A R  ==========
+     # ========== F R A M E  N A V B A R  ========== #
     frame_btn = ctk.CTkFrame(ventana_ventas)
     frame_btn.grid(row=1, column=0, padx=15, pady=15, sticky="nsew")
     frame_btn.grid_columnconfigure(0, weight=1)
@@ -230,7 +230,7 @@ def ventana_ventas(usuario, rol):
     treeview.column("fecha", width=50)
 
 
-    # === BLOQUE TABLA DE ventas ===
+    # === BLOQUE TABLA DE VENTAS ===
 
     # Crear un marco con esquinas redondeadas para la tabla
     tabla_frame = ctk.CTkFrame(
@@ -318,7 +318,7 @@ def ventana_ventas(usuario, rol):
     footer_label = ctk.CTkLabel(ventana_ventas, 
                                 font=ctk.CTkFont(size=10, weight="bold"),
                                 fg_color="transparent",
-                                text="Copyright © 2025\nPython Hack ElGuada90",
+                                text="Copyright © 2025 * Python Hack ElGuada90",
                                 corner_radius=5)
     footer_label.grid(row=4, column= 0, padx=5, pady=5, sticky="s" )
 

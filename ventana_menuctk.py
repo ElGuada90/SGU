@@ -9,6 +9,8 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from matplotlib.patches import FancyBboxPatch
+from matplotlib import patheffects as pe
 import matplotlib.pyplot as plt
 from modulo_conexion_mysql import ConexionMySQL
 
@@ -26,12 +28,33 @@ ctk.set_default_color_theme("blue")  # Themes: "blue" (default), "green", "dark-
 # enlace o ruta de imagenes
 icon = resource_path("static\\images\\Logo Python ico.ico")
 
+def aplicar_bordes_redondeados(fig, ax, color_fondo="#14213d", color_borde="#5dade2"):
+    fig.patch.set_facecolor(color_fondo)
+
+    rounded_box = FancyBboxPatch(
+        (-0.02, -0.02), 1.04, 1.04,
+        boxstyle="round,pad=0.0,rounding_size=0.06",
+        transform=fig.transFigure,
+        linewidth=1.9,
+        edgecolor=color_borde,
+        facecolor=color_fondo,
+        zorder=-1,
+    )
+    rounded_box.set_path_effects([
+        pe.withStroke(linewidth=3, foreground="black", alpha=0.22)
+    ])
+    fig.add_artist(rounded_box)
+
+    ax.set_facecolor(color_fondo)
+    ax.set_position([0.07, 0.12, 0.86, 0.74])
+    ax.set_zorder(1)
+
 # funcion para crear la ventana principal
 def ventana_principal(usuario, rol):
     ventana_principal = ctk.CTk()
     ventana_principal.title("Sistema de Gestion Unico")
     ventana_principal.iconbitmap(icon)
-    ventana_principal.geometry("1280x720+150+8")
+    ventana_principal.geometry("1280x720+0+0")
     ventana_principal.resizable(True, True)
     ventana_principal.grid_columnconfigure(0, weight=1)
     ventana_principal.grid_rowconfigure(1, weight=1)
@@ -85,22 +108,26 @@ def ventana_principal(usuario, rol):
         valores = [float(fila["valor"]) for fila in datos]
 
         # Crear la figura
-        fig = Figure(figsize=(5, 3), dpi=100)
+        fig = Figure(figsize=(6.2, 3.4), dpi=100)
         ax = fig.add_subplot(111)
+        aplicar_bordes_redondeados(fig, ax)
+        fig.subplots_adjust(left=0.08, right=0.98, top=0.90, bottom=0.24)
 
         # Crear gráfico de barras
         ax.bar(nombres, valores)
-        ax.set_title("Ventas por Vendedor")
-        #ax.set_xlabel("Vendedor", fontsize=8)
-        ax.set_ylabel("Monto Vendido")
-        ax.tick_params(axis='x', rotation=35, labelsize=7)
+        ax.set_title("Ventas por Vendedor", color="white")
+        ax.set_ylabel("Monto Vendido", color="white")
+        ax.tick_params(axis='x', rotation=35, labelsize=7, colors='white')
+        ax.tick_params(axis='y', colors='white')
+        for spine in ax.spines.values():
+            spine.set_color("white")
         fig.subplots_adjust(bottom=0.25)  # Aumenta margen inferior
 
         # Insertar en el frame
         canvas = FigureCanvasTkAgg(fig, master=frame_grafico1)
         canvas.draw()
         widget = canvas.get_tk_widget()
-        widget.pack(fill="both", expand=True)
+        widget.pack(fill="both", expand=True, padx=8, pady=8)
 
     ##### Ventas por categoria      
 
@@ -127,8 +154,10 @@ def ventana_principal(usuario, rol):
         valores = [float(fila["ventas"]) for fila in datos]
 
          # Crear figura
-        fig = Figure(figsize=(5, 3), dpi=100)
+        fig = Figure(figsize=(6.2, 3.4), dpi=100)
         ax = fig.add_subplot(111, aspect='equal')
+        aplicar_bordes_redondeados(fig, ax)
+        fig.subplots_adjust(left=0.04, right=0.96, top=0.90, bottom=0.10)
 
         # Gráfico donut
         wedges, texts = ax.pie(
@@ -173,7 +202,12 @@ def ventana_principal(usuario, rol):
                 **kw
             )
 
-        ax.set_title("Ventas por Categoría", fontsize=11)
+        ax.set_title("Ventas por Categoría", fontsize=11, color="white")
+        ax.set_ylabel("", color="white")
+        ax.tick_params(axis='x', colors='white')
+        ax.tick_params(axis='y', colors='white')
+        for spine in ax.spines.values():
+            spine.set_color("white")
 
         # Limpiar frame antes de dibujar
         for widget in frame_grafico2.winfo_children():
@@ -182,7 +216,7 @@ def ventana_principal(usuario, rol):
         # Mostrar gráfico en customtkinter
         canvas = FigureCanvasTkAgg(fig, master=frame_grafico2)
         canvas.draw()
-        canvas.get_tk_widget().pack(fill="both", expand=True)
+        canvas.get_tk_widget().pack(fill="both", expand=True, padx=8, pady=8)
 
 
     def grafico_promedio_ventas(frame_grafico3):
@@ -195,12 +229,17 @@ def ventana_principal(usuario, rol):
         promedio = datos[0]["Promedio"] 
 
         # Crear figura
-        fig = Figure(figsize=(4, 3), dpi=100)
+        fig = Figure(figsize=(5.2, 3.8), dpi=100)
         ax = fig.add_subplot(111)
+        aplicar_bordes_redondeados(fig, ax)
 
         # Datos reales
         barras = ax.bar(["Valor Promedio"], [promedio])
-        ax.set_title("Promedio de Ventas")
+        ax.set_title("Promedio de Ventas", color="white")
+        ax.tick_params(axis='x', colors='white')
+        ax.tick_params(axis='y', colors='white')
+        for spine in ax.spines.values():
+            spine.set_color("white")
         #ax.set_ylabel("Valor Promedio")
 
         # Obtener referencia de la única barra
@@ -226,7 +265,7 @@ def ventana_principal(usuario, rol):
 
         # Colocar el gráfico dentro del frame
         widget = canvas.get_tk_widget()
-        widget.pack(fill="both", expand=True)
+        widget.pack(fill="both", expand=True, padx=8, pady=8)
 
     # Funcion para el OptionMMenu
     def ejecutar_menu(opcion):
@@ -239,36 +278,50 @@ def ventana_principal(usuario, rol):
         elif opcion == "Exit":
             ventana_principal.destroy()    
 
-    frame_menu = ctk.CTkFrame(ventana_principal)
-    frame_menu.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+    # --- Bloque de Frame para barra de navegación ---
+    nav_frame = ctk.CTkFrame(ventana_principal, corner_radius=8) 
+    nav_frame.grid(row=0, column=0, columnspan=2, padx=15, pady=15, sticky="ew")
+    nav_frame.grid_columnconfigure(0, weight=1)
+    nav_frame.grid_rowconfigure(0, weight=1)
 
     # ----- PRIMER OPTIONMENU (FILE) -----
     opciones_file = ["Usuarios", "Productos", "Ventas", "Exit"]
 
-    menu_opciones = ctk.CTkOptionMenu(frame_menu,
+    menu_opciones = ctk.CTkOptionMenu(nav_frame,
                                 values=opciones_file,
                                 command=ejecutar_menu,
                                 width=200)
     menu_opciones.set("Menu Principal")  # Texto inicial
-    menu_opciones.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+    menu_opciones.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+
+    # Label de bienvenida
+    label = ctk.CTkLabel(nav_frame,
+                        text=f'Bienvenido! {usuario}, Rol: {rol}',
+                        font=ctk.CTkFont(family="candara", size=16, weight="bold"),
+                        fg_color="#0078d7",
+                        #bg_color="darkblue",
+                        corner_radius=5,
+                        #height=40 
+                        )
+    label.grid(row=0, column=0, padx=5, pady=8, sticky="e")
     
     """ Bloque de Frames """
     frame_principal = ctk.CTkFrame(ventana_principal)
-    frame_principal.grid(row=1, column=0, padx=10, pady=2, sticky="nsew")
+    frame_principal.grid(row=1, column=0, padx=15, pady=2, sticky="nsew")
     frame_principal.grid_columnconfigure((0,1), weight=1)
     frame_principal.grid_rowconfigure((0,1), weight=1)
 
-    frame_grafico1 = ctk.CTkFrame(frame_principal, fg_color="#02243F")
+    frame_grafico1 = ctk.CTkFrame(frame_principal, fg_color="#02243F", corner_radius=20, border_width=1)
     frame_grafico1.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
     frame_grafico1.grid_columnconfigure(0, weight=1)
     frame_grafico1.grid_rowconfigure(0, weight=1)
 
-    frame_grafico2 = ctk.CTkFrame(frame_principal, fg_color="#02243F")
+    frame_grafico2 = ctk.CTkFrame(frame_principal, fg_color="#02243F", corner_radius=20, border_width=1)
     frame_grafico2.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
     frame_grafico2.grid_columnconfigure(0, weight=1)
     frame_grafico2.grid_rowconfigure(0, weight=1)
 
-    frame_grafico3 = ctk.CTkFrame(frame_principal, fg_color="#02243F")
+    frame_grafico3 = ctk.CTkFrame(frame_principal, fg_color="#02243F", corner_radius=20, border_width=1)
     frame_grafico3.grid(row=0, column=1, rowspan=2, padx=10, pady=10, sticky="nsew")
     frame_grafico3.grid_columnconfigure(0, weight=1)
     frame_grafico3.grid_rowconfigure(0, weight=1)
@@ -276,5 +329,12 @@ def ventana_principal(usuario, rol):
     grafico_ventas_por_vendedor(frame_grafico1)
     grafico_ventas_por_categoria(frame_grafico2)
     grafico_promedio_ventas(frame_grafico3)
+
+    footer_label = ctk.CTkLabel(ventana_principal, 
+                                font=ctk.CTkFont(size=10, weight="bold"),
+                                fg_color="transparent",
+                                text="Copyright © 2025 * Python Hack ElGuada90",
+                                corner_radius=5)
+    footer_label.grid(row=2, column= 0, columnspan=2, padx=5, pady=5, sticky="s" )
 
     ventana_principal.mainloop()

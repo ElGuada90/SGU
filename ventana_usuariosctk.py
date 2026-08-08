@@ -3,8 +3,7 @@
 """ Bloque de Configuración """
 # importamos librerias
 import customtkinter as ctk
-from PIL import Image, ImageTk
-from tkinter import Frame, Menu
+from PIL import Image
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 
@@ -24,14 +23,20 @@ def ventana_usuarios(usuario, rol):
 
     lupa = resource_path("static\\images\\Lupa Blanca.png")
     lupa_icon = ctk.CTkImage(light_image=Image.open(lupa), size=(25, 25))
+    add = resource_path("static\\images\\add.png")
+    add_icon = ctk.CTkImage(light_image=Image.open(add), size=(25, 25))
+    edit = resource_path("static\\images\\edit.png")
+    edit_icon = ctk.CTkImage(light_image=Image.open(edit), size=(25, 25))
+    delete = resource_path("static\\images\\delete.png")
+    delete_icon = ctk.CTkImage(light_image=Image.open(delete), size=(25, 25))
     
     ventana_usuarios = ctk.CTk()
     ventana_usuarios.title("Sistema de Gestion Unico")
     ventana_usuarios.iconbitmap(icon)
-    ventana_usuarios.geometry("1280x720+150+8")
+    ventana_usuarios.geometry("1280x720+0+0")
     ventana_usuarios.resizable(True, True)
-    ventana_usuarios.grid_columnconfigure(0, weight=1)
-    ventana_usuarios.grid_rowconfigure(3, weight=1)
+    ventana_usuarios.grid_columnconfigure(1, weight=1)
+    ventana_usuarios.grid_rowconfigure(2, weight=1)
 
     """ Bloque de Funciones """
     # Crear instancia de conexión
@@ -166,19 +171,6 @@ def ventana_usuarios(usuario, rol):
             messagebox.showerror("Error", "Por favor, complete todos los campos")
 
 
-    """ Bloque de Menu """
-    # create a menubar
-    menubar = Menu(ventana_usuarios)
-    ventana_usuarios.config(menu=menubar)
-
-    # create the file_menu
-    file_menu = Menu(
-        menubar,
-        tearoff=0
-    )
-
-    # add menu items to the File menu
-    file_menu = Menu(menubar, tearoff=0, font=("verdana", 10))
     
     """ Función para volver al menú principal """
     def volver_menu_principal():
@@ -198,39 +190,57 @@ def ventana_usuarios(usuario, rol):
         from ventana_ventasctk import ventana_ventas
         ventana_usuarios.destroy()  # Cerrar ventana actual
         ventana_ventas(usuario, rol)  # Abrir menú principal
-        
-    file_menu.add_command(label='Menu Principal', command=volver_menu_principal)
-    file_menu.add_command(label='Productos', command=volver_productos)
-    file_menu.add_command(label='Ventas', command=volver_ventas)
-    file_menu.add_separator()
+    
+    # ============================================== #
+    """ Función para manejar las opciones del menú """
+    # ============================================== #
+   
+    # Funcion para el OptionMMenu
+    def ejecutar_menu(opcion):
+        if opcion == "Menu Principal":
+            volver_menu_principal()
+        elif opcion == "Productos":
+            volver_productos()
+        elif opcion == "Ventas":
+            volver_ventas()
+        elif opcion == "Exit":
+            ventana_usuarios.destroy()  
 
-    # add Exit menu item
-    file_menu.add_command(
-        label='Exit',
-        command=ventana_usuarios.destroy,
-    )
+    # =========================== #
+    """ Bloque de Barra de Menu """
+    # =========================== #  
 
-    # add the File menu to the menubar
-    menubar.add_cascade(
-        label="File",
-        menu=file_menu
-    )
-    # create the Help menu
-    help_menu = Menu(
-        menubar,
-        tearoff=0
-    )
+    # --- Bloque de Frame para barra de navegación ---
+    nav_frame = ctk.CTkFrame(ventana_usuarios, corner_radius=8) 
+    nav_frame.grid(row=0, column=0, columnspan=2, padx=15, pady=15, sticky="ew")
+    nav_frame.grid_columnconfigure(0, weight=1)
+    nav_frame.grid_rowconfigure(0, weight=1)
 
-    help_menu = Menu(menubar, tearoff=0, font=("verdana", 10))
-    help_menu.add_command(label='Welcome')
-    help_menu.add_command(label='About...')
+    # ----- PRIMER OPTIONMENU (FILE) -----
+    opciones_file = ["Menu Principal", "Productos", "Ventas", "Exit"]
 
-    # add the Help menu to the menubar
-    menubar.add_cascade(
-        label="Help",
-        menu=help_menu
+    menu_opciones = ctk.CTkOptionMenu(nav_frame,
+                                values=opciones_file,
+                                command=ejecutar_menu,
+                                width=200)
+    menu_opciones.set("Usuarios")  # Texto inicial
+    menu_opciones.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
-    )
+    # Label para contener icono de busqueda (Lupa)
+    label_lupa_icon = ctk.CTkLabel(nav_frame,
+                    text="",
+                    image=lupa_icon,
+                    font=ctk.CTkFont(size=18, weight="bold"),
+                    height=31)
+    label_lupa_icon.grid(row=0, column=0, padx=220, pady=(8), sticky="e")
+
+    # Widget para busqueda dinamica de datos
+    entry_consulta = ctk.CTkEntry(nav_frame,
+                                    placeholder_text="Buscar...",
+                                    width=210,
+                                    height=30)
+    entry_consulta.grid(row=0, column=0, padx=5, pady=(8), sticky="ne")
+    entry_consulta.bind("<KeyRelease>", consulta_dinamica)
 
     """ Variables de sesión """
     usuario = usuario
@@ -246,103 +256,82 @@ def ventana_usuarios(usuario, rol):
                         corner_radius=5,
                         #height=40 
                         )
-    label_titulo.grid(row=1, column=0, padx=5, pady=8, sticky="nw")
+    label_titulo.grid(row=1, column=0, padx=15, pady=5, sticky="nw")
+        
+    
+    # Contenedor Form Frame
+    form_frame = ctk.CTkFrame(ventana_usuarios, corner_radius=5)
+    form_frame.grid(row=2, column=0, padx=(15,2), pady=2, sticky="nsew")
+    form_frame.grid_columnconfigure((0,1,2), weight=1)
 
-    # Label de bienvenida
-    label = ctk.CTkLabel(ventana_usuarios, 
-                        text=f'Bienvenido! {usuario}, Rol: {role}',
-                        font=ctk.CTkFont(family="candara", size=14, weight="normal"),
-                        fg_color="#0078d7",
-                        #bg_color="darkblue",
-                        corner_radius=5,
-                        #height=40 
-                        )
-    label.grid(row=0, column=0, padx=321, pady=8, sticky="ne")
-        
-    #Boton para consultas
-    boton_consultar = ctk.CTkButton(ventana_usuarios,
-                                    text="Consultar",           
-                                    corner_radius=5,
-                                    width=100,
-                                    command=cargar_usuarios
-                                    )
-    boton_consultar.grid(row=0, column=0, padx=5, pady=8, sticky="ne")
-        
+    label_usuario = ctk.CTkLabel(form_frame, text="Usuario", font=ctk.CTkFont(size=12, weight="bold"))
+    label_usuario.grid(row=0, column=0, columnspan=3, padx=10, pady=(2,2), sticky="w")
+    entry_usuario = ctk.CTkEntry(form_frame, placeholder_text='Ingrese Usuario...', height=35)
+    entry_usuario.grid(row=1, column=0, columnspan=3, padx=10, pady=1, sticky="ew")
+
+    label_contraseña = ctk.CTkLabel(form_frame, text="Contraseña", font=ctk.CTkFont(size=12, weight="bold"))
+    label_contraseña.grid(row=2, column=0, columnspan=3, padx=10, pady=(2,2), sticky="w")
+    entry_contraseña = ctk.CTkEntry(form_frame, placeholder_text="Ingrese Contraseña...", height=35)
+    entry_contraseña.grid(row=3, column=0, columnspan=3, padx=10, pady=1, sticky="ew")
+
+    label_role = ctk.CTkLabel(form_frame, text="Role", font=ctk.CTkFont(size=12, weight="bold"))
+    label_role.grid(row=4, column=0, columnspan=3, padx=10, pady=(2,2), sticky="w")
+    entry_role = ctk.CTkEntry(form_frame, placeholder_text="Ingrese Role...", height=35)
+    entry_role.grid(row=5, column=0, columnspan=3, padx=10, pady=1, sticky="ew")
+
+    label_nombre = ctk.CTkLabel(form_frame, text="Nombre", font=ctk.CTkFont(size=12, weight="bold"))
+    label_nombre.grid(row=6, column=0, columnspan=3, padx=10, pady=(2,2), sticky="w")
+    entry_nombre = ctk.CTkEntry(form_frame, placeholder_text="Ingrese Nombre...", height=35)
+    entry_nombre.grid(row=7, column=0, columnspan=3, padx=10, pady=1, sticky="ew")
+
+    label_apellido = ctk.CTkLabel(form_frame, text="Apellido", font=ctk.CTkFont(size=12, weight="bold"))
+    label_apellido.grid(row=8, column=0, columnspan=3, padx=10, pady=(2,2), sticky="w")
+    entry_apellido = ctk.CTkEntry(form_frame, placeholder_text="Ingrese Apellido...", height=35)
+    entry_apellido.grid(row=9, column=0, columnspan=3, padx=10, pady=1, sticky="ew")
+
+    label_email = ctk.CTkLabel(form_frame, text="Email", font=ctk.CTkFont(size=12, weight="bold"))
+    label_email.grid(row=10, column=0, columnspan=3, padx=10, pady=(2,2), sticky="w")
+    entry_email = ctk.CTkEntry(form_frame, placeholder_text="Ingrese Email...", height=35)
+    entry_email.grid(row=11, column=0, columnspan=3, padx=10, pady=1, sticky="ew")
+
+    label_telefono = ctk.CTkLabel(form_frame, text="Teléfono", font=ctk.CTkFont(size=12, weight="bold"))
+    label_telefono.grid(row=12, column=0, columnspan=3, padx=10, pady=(2,2), sticky="w")
+    entry_telefono = ctk.CTkEntry(form_frame, placeholder_text="Ingrese Teléfono...", height=35)
+    entry_telefono.grid(row=13, column=0, columnspan=3, padx=10, pady=1, sticky="ew")
+    
     # Boton para registros nuevos
-    boton_registrar = ctk.CTkButton(ventana_usuarios,
-                                    text="Registrar",
+    boton_registrar = ctk.CTkButton(form_frame,
+                                    text="",
+                                    image=add_icon,
                                     corner_radius=5,
                                     width=100,
-                                    command=registrar_usuario
+                                    command=registrar_usuario,
+                                    height=35
                                     )
-    boton_registrar.grid(row=0, column=0, padx=110, pady=8, sticky="ne")
+    boton_registrar.grid(row=14, column=0, padx=(10, 5), pady=15, sticky="we")
 
     # Boton para editar usuarios
-    boton_editar = ctk.CTkButton(ventana_usuarios,
-                                text="Editar",           
+    boton_editar = ctk.CTkButton(form_frame,
+                                text="",   
+                                image=edit_icon,        
                                 corner_radius=5,
                                 width=100,
-                                command=modificar_usuario
+                                command=modificar_usuario,
+                                height=35
                                 )
-    boton_editar.grid(row=0, column=0, padx=216, pady=8, sticky="ne")
+    boton_editar.grid(row=14, column=1, padx=(5, 5), pady=15, sticky="we")
 
-    # Widget para busqueda dinamica de datos
-    entry_consulta = ctk.CTkEntry(ventana_usuarios,
-                                    placeholder_text="Buscar...",
-                                    width=210,
-                                    height=30)
-    entry_consulta.grid(row=1, column=0, padx=5, pady=(8), sticky="ne")
-    entry_consulta.bind("<KeyRelease>", consulta_dinamica)
+    # Boton delete para eliminar usuarios
+    boton_delete = ctk.CTkButton(form_frame,
+                                    text="",  
+                                    image=delete_icon,         
+                                    corner_radius=5,
+                                    width=100,
+                                    command=cargar_usuarios,
+                                    height=35
+                                    )
+    boton_delete.grid(row=14, column=2, padx=(5, 10), pady=15, sticky="ew")
 
-    # Label para icono de busqueda
-    label_busqueda = ctk.CTkLabel(ventana_usuarios,
-                    text="",
-                    image=lupa_icon,
-                    font=ctk.CTkFont(size=18, weight="bold"),
-                    height=31)
-    label_busqueda.grid(row=1, column=0, padx=220, pady=(8), sticky="ne")
-
-    # Contenedor Frame
-    background_frame = ctk.CTkFrame(ventana_usuarios, corner_radius=5, width=25)
-    background_frame.grid(row=2, column=0, padx=5, pady=5, sticky="nwe")
-    background_frame.grid_columnconfigure((0,1,2,3,4), weight=1)
-
-    entry_usuario = ctk.CTkEntry(background_frame, placeholder_text="Usuario")
-    entry_usuario.grid(row=0, column=0, padx=5, pady=5, sticky="nwe")
-
-    entry_contraseña = ctk.CTkEntry(background_frame, placeholder_text="Contraseña")
-    entry_contraseña.grid(row=0, column=1, padx=5, pady=5, sticky="nwe")
-
-    entry_role = ctk.CTkEntry(background_frame, placeholder_text="Role")
-    entry_role.grid(row=0, column=2, padx=5, pady=5, sticky="nwe")
-
-    entry_nombre = ctk.CTkEntry(background_frame, placeholder_text="Nombre")
-    entry_nombre.grid(row=0, column=3, padx=5, pady=5, sticky="nwe")
-
-    entry_apellido = ctk.CTkEntry(background_frame, placeholder_text="Apellido")
-    entry_apellido.grid(row=0, column=4, padx=5, pady=5, sticky="nwe")
-
-    entry_email = ctk.CTkEntry(background_frame, placeholder_text="Email")
-    entry_email.grid(row=0, column=5, padx=5, pady=5, sticky="nwe")
-
-    entry_telefono = ctk.CTkEntry(background_frame, placeholder_text="Teléfono")
-    entry_telefono.grid(row=0, column=6, padx=5, pady=5, sticky="nwe")
-
-    """ Crear un estilo personalizado para la tabla 
-    style = ttk.Style()
-    style.configure("Treeview", rowheight=30)
-    
-    # Tabla para mostrar datos
-    treeview = ttk.Treeview(ventana_usuarios, columns=("Usuario", 
-                                                   "Contraseña", 
-                                                   "Role", 
-                                                   "Nombre", 
-                                                   "Apellido", 
-                                                   "Email", 
-                                                   "Teléfono"),
-                                                    show="headings")
-    treeview.grid(row=3, column=0, columnspan=5, padx=5, pady=5, sticky="nsew")
-    """
     # === BLOQUE TABLA DE USUARIOS ===
 
     # Crear un marco con esquinas redondeadas para la tabla
@@ -351,7 +340,7 @@ def ventana_usuarios(usuario, rol):
         corner_radius=15,          # Bordes redondeados
         fg_color="#2b2b2b",        # Color de fondo del frame
     )
-    tabla_frame.grid(row=3, column=0, padx=15, pady=15, sticky="nsew")
+    tabla_frame.grid(row=2, column=1, padx=(5,15), pady=2, sticky="nsew")
     #ventana_usuarios.grid_rowconfigure(0, weight=1)
     #ventana_usuarios.grid_columnconfigure(0, weight=1)
 
@@ -390,7 +379,7 @@ def ventana_usuarios(usuario, rol):
         fieldbackground="#2e2e2e",
         bordercolor="#2b2b2b",
         borderwidth=0,
-        font=("Candara", 11)
+        font=("Candara", 14)
     )
 
     # Encabezados con color personalizado
@@ -398,7 +387,7 @@ def ventana_usuarios(usuario, rol):
         "Treeview.Heading",
         background="#3b3b3b",
         foreground="#00bfff",
-        font=("Candara", 11, "bold")
+        font=("Candara", 14, "bold")
     )
 
     # Selección con color personalizado
@@ -421,9 +410,9 @@ def ventana_usuarios(usuario, rol):
     treeview.column("Usuario", width=50)
     treeview.column("Contraseña", width=50)
     treeview.column("Role", width=50)
-    treeview.column("Nombre", width=150)
-    treeview.column("Apellido", width=100)
-    treeview.column("Email", width=100)
+    treeview.column("Nombre", width=50)
+    treeview.column("Apellido", width=50)
+    treeview.column("Email", width=200)
     treeview.column("Teléfono", width=100)
 
     # Vincular evento de selección de fila
@@ -433,9 +422,9 @@ def ventana_usuarios(usuario, rol):
     footer_label = ctk.CTkLabel(ventana_usuarios, 
                                 font=ctk.CTkFont(size=10, weight="bold"),
                                 fg_color="transparent",
-                                text="Copyright © 2025\nPython Hack ElGuada90",
+                                text="Copyright © 2025 * Python Hack ElGuada90",
                                 corner_radius=5)
-    footer_label.grid(row=4, column= 0, padx=5, pady=5, sticky="s" )
+    footer_label.grid(row=3, column= 0, columnspan=2, padx=5, pady=5, sticky="s" )
 
     # Cargar usuarios al iniciar la ventana
     cargar_usuarios()
